@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <title>Zuhause</title>
 <meta name="viewport" content="width=1920">
-<link rel="stylesheet" href="tv.css?v=4">
+<script>
+// Updates come from the home server, so this module never needs reinstalling.
+window.TV_BASE = "http://192.168.68.58:8123/local/tv/";
+window.TV_BUST = String(new Date().getTime());
+document.write('<link rel="stylesheet" href="' + window.TV_BASE + 'tv.css?t=' + window.TV_BUST + '">');
+</script>
 </head>
 <body>
 <div id="screen">
@@ -40,6 +45,6 @@
   <div id="offline"></div>
 </div>
 <script>window.TV_STATUS_URL = "http://192.168.68.58:8123/local/tv/status.js";</script>
-<script src="tv.js?v=5"></script>
+<script>document.write('<script src="' + window.TV_BASE + 'tv.js?t=' + window.TV_BUST + '"><\/script>');</script>
 </body>
 </html>
