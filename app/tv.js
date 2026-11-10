@@ -280,7 +280,10 @@
     else if (k === 13) { launchApp(APPS[focusIdx]); }
     else if (k === 406 || k === 457 || k === 73) { openDiag(); }   // blue, info, "i"
     else if (k === 10009) {
-      try { if (window.tizen && window.tizen.application) { window.tizen.application.getCurrentApplication().exit(); } } catch (e3) { }
+      // Back: exit when we are a real Tizen app; otherwise let TizenBrew / the browser handle it (go back).
+      try { if (window.tizen && window.tizen.application) { window.tizen.application.getCurrentApplication().exit(); e.preventDefault(); return; } } catch (e3) { }
+      try { if (window.history && window.history.length > 1) { window.history.back(); e.preventDefault(); } } catch (e4) { }
+      return;
     }
     else { return; }
     e.preventDefault();
