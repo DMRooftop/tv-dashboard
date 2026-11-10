@@ -6,22 +6,28 @@
   var STALE_S = 300;          // status older than 5 min -> "offline" marker
   var WAKE_MS = 60000;        // calm screen: show full UI this long after a key press
 
-  // Candidate Tizen app IDs per tile (tried in order). Fill IPTV with the real ID from the diagnostics screen.
+  // Home Assistant webhooks (see HA package tv_apps.yaml, local_only). Override with window.TV_HA_URL.
+  var HA_URL = window.TV_HA_URL || 'http://192.168.68.58:8123';
+  var COLS = 5;               // tiles per row (2 rows)
+
+  // Tizen app IDs are tried first when window.tizen can launch apps (plain Tizen web app). Inside TizenBrew that API
+  // is missing, so every tile falls back to the HA webhook, which selects the app on the TV media_player.
   var APPS = [
-    { key: 'youtube', label: 'YouTube', sub: 'TizenTube', letter: 'Y', color: '#e53935', ids: ['111299001912', '9Ur5IzDKqV.TizenYouTube'] },
-    { key: 'netflix', label: 'Netflix', letter: 'N', color: '#c40f1a', ids: ['11101200001', '3201907018807', 'org.tizen.netflix-app'] },
-    { key: 'prime', label: 'Prime Video', letter: 'P', color: '#1799d8', ids: ['3201512006785', '3201910019365', 'org.tizen.primevideo'] },
-    { key: 'iptv', label: 'IPTV', letter: 'TV', color: '#2e9b6a', ids: [] /* e.g. ['XXXXXXXXXX.IPTV'] */ },
-    { key: 'disney', label: 'Disney+', letter: 'D', color: '#1f3fa8', ids: ['3201901017640'] },
+    { key: 'youtube', label: 'YouTube', hook: 'tv_app_youtube', letter: 'Y', color: '#e53935', ids: ['111299001912', '9Ur5IzDKqV.TizenYouTube'] },
+    { key: 'netflix', label: 'Netflix', hook: 'tv_app_netflix', letter: 'N', color: '#c40f1a', ids: ['11101200001', '3201907018807', 'org.tizen.netflix-app'] },
+    { key: 'prime', label: 'Prime Video', hook: 'tv_app_prime', letter: 'P', color: '#1799d8', ids: ['3201512006785', '3201910019365', 'org.tizen.primevideo'] },
+    { key: 'iptv', label: 'IPTV', hook: 'tv_app_iptv', letter: 'TV', color: '#2e9b6a', ids: [] },
+    { key: 'disney', label: 'Disney+', hook: 'tv_app_disney', letter: 'D', color: '#1f3fa8', ids: ['3201901017640'] },
+    { key: 'zattoo', label: 'Zattoo', hook: 'tv_app_zattoo', letter: 'Z', color: '#e07b00', ids: [] },
+    { key: 'ard', label: 'ARD', hook: 'tv_app_ard', letter: 'A', color: '#0a4b9c', ids: [] },
+    { key: 'zdf', label: 'ZDF', hook: 'tv_app_zdf', letter: 'ZDF', color: '#d9650e', ids: [] },
+    { key: 'spotify', label: 'Spotify', hook: 'tv_app_spotify', letter: 'S', color: '#1a9e48', ids: [] },
     { key: 'diag', label: '?', letter: '?', color: '#3a3f57', diag: true }
   ];
 
   var T = {
     de: {
-      noPlain: 'Nur auf dem Fernseher startbar (Tizen-App nötig).',
-      failed: 'App nicht gefunden – ID prüfen (blaue Taste = Diagnose).',
-      noId: 'Keine App-ID hinterlegt – siehe Diagnose (blaue Taste).',
-      launching: 'Starte ',
+      launching: 'Startet ',
       ideas: 'Ideen für heute', noIdeas: 'Keine Ideen gerade',
       range: 'Tief / Hoch', home: 'zuhause', away: 'unterwegs', offline: 'Keine aktuellen Daten',
       diag: 'Diagnose: installierte Apps (Name / ID)', diagHint: 'Zurück = schließen   ↑↓ = blättern',
@@ -30,9 +36,6 @@
       flags: { storm: 'Wichtig jetzt: Gewitter', hail: 'Wichtig jetzt: Hagel', exceptional: 'Wichtig jetzt: Unwetterlage', heat: 'Wichtig jetzt: große Hitze', frost: 'Wichtig jetzt: strenger Frost', wind: 'Wichtig jetzt: starker Wind' }
     },
     en: {
-      noPlain: 'Can only be launched on the TV (Tizen app needed).',
-      failed: 'App not found – check ID (blue key = diagnostics).',
-      noId: 'No app ID set – see diagnostics (blue key).',
       launching: 'Starting ',
       ideas: 'Ideas for today', noIdeas: 'No ideas right now',
       range: 'Low / High', home: 'home', away: 'away', offline: 'No current data',
@@ -42,10 +45,7 @@
       flags: { storm: 'Important now: thunderstorm', hail: 'Important now: hail', exceptional: 'Important now: severe weather', heat: 'Important now: extreme heat', frost: 'Important now: hard frost', wind: 'Important now: strong wind' }
     },
     es: {
-      noPlain: 'Solo se puede abrir en la tele (hace falta app Tizen).',
-      failed: 'App no encontrada – revisa el ID (botón azul = diagnóstico).',
-      noId: 'Sin ID de app – ver diagnóstico (botón azul).',
-      launching: 'Abriendo ',
+      launching: 'Iniciando ',
       ideas: 'Ideas para hoy', noIdeas: 'Sin ideas ahora',
       range: 'Mín / Máx', home: 'en casa', away: 'fuera', offline: 'Sin datos actuales',
       diag: 'Diagnóstico: apps instaladas (nombre / ID)', diagHint: 'Atrás = cerrar   ↑↓ = desplazar',
@@ -179,9 +179,11 @@
     var h = '', i, a;
     for (i = 0; i < APPS.length; i++) {
       a = APPS[i];
+      if (i % COLS === 0) { h += '<div class="arow">'; }
       h += '<div class="app card' + (a.diag ? ' q' : '') + (i === focusIdx ? ' focus' : '') + '" id="app-' + i + '">' +
         '<div class="ico" style="background:' + a.color + '">' + esc(a.letter) + '</div>' +
         '<div class="lbl">' + esc(a.label) + '</div></div>';
+      if (i % COLS === COLS - 1 || i === APPS.length - 1) { h += '</div>'; }
     }
     $('apps').innerHTML = h;
   }
@@ -204,14 +206,22 @@
 
   // ---------- launching ----------
   function hasTizenApp() { return !!(window.tizen && window.tizen.application && window.tizen.application.launch); }
+  var hookImg = null;
+  function callHook(a) {
+    if (!a.hook) { return; }
+    try {
+      // image request = simple GET, no CORS preflight; the response body is irrelevant
+      hookImg = new Image();
+      hookImg.src = HA_URL + '/api/webhook/' + a.hook + '?t=' + new Date().getTime();
+    } catch (e) { }
+  }
   function launchApp(a) {
     if (a.diag) { openDiag(); return; }
-    if (!hasTizenApp()) { toast(tr().noPlain); return; }
-    if (!a.ids || !a.ids.length) { toast(tr().noId); return; }
-    var idx = 0;
     toast(tr().launching + a.label + ' …');
+    if (!hasTizenApp() || !a.ids || !a.ids.length) { callHook(a); return; }
+    var idx = 0;
     var next = function () {
-      if (idx >= a.ids.length) { toast(tr().failed); return; }
+      if (idx >= a.ids.length) { callHook(a); return; }
       var id = a.ids[idx++];
       try {
         window.tizen.application.launch(id, function () { /* launched */ }, function () { next(); });
@@ -265,7 +275,8 @@
     }
     if (k === 37) { setFocus(focusIdx - 1); }
     else if (k === 39) { setFocus(focusIdx + 1); }
-    else if (k === 38 || k === 40) { /* single row */ }
+    else if (k === 38) { setFocus(focusIdx - COLS); }
+    else if (k === 40) { setFocus(focusIdx + COLS); }
     else if (k === 13) { launchApp(APPS[focusIdx]); }
     else if (k === 406 || k === 457 || k === 73) { openDiag(); }   // blue, info, "i"
     else if (k === 10009) {
