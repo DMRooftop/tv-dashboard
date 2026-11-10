@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Zuhause</title>
+<meta name="viewport" content="width=1920">
+<link rel="stylesheet" href="tv.css?v=3">
+</head>
+<body>
+<div id="screen">
+  <div id="main">
+    <div id="top">
+      <div id="left">
+        <div id="clock">--:--</div>
+        <div id="date"></div>
+        <div id="greet"></div>
+        <div id="chips"></div>
+      </div>
+      <div id="right">
+        <div id="weather" class="card">
+          <div id="w-temp">--</div>
+          <div id="w-info">
+            <div id="w-cond"></div>
+            <div id="w-range"></div>
+          </div>
+        </div>
+        <div id="flags"></div>
+      </div>
+    </div>
+    <div id="ideas-title"></div>
+    <div id="ideas"></div>
+    <div id="apps"></div>
+  </div>
+  <div id="toast"></div>
+  <div id="diag">
+    <div id="diag-title"></div>
+    <div id="diag-body"></div>
+    <div id="diag-hint"></div>
+  </div>
+  <div id="offline"></div>
+</div>
+<script>window.TV_STATUS_URL = "http://192.168.68.58:8123/local/tv/status.js";</script>
+<script src="tv.js?v=4"></script>
+</body>
+</html>

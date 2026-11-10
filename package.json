@@ -1,0 +1,12 @@
+{
+  "name": "tv-dashboard",
+  "version": "1.0.0",
+  "description": "Home dashboard (clock, weather, ideas, app launcher) for Samsung Tizen TVs via TizenBrew",
+  "packageType": "app",
+  "appName": "Zuhause",
+  "appPath": "app/index.html",
+  "keys": ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "Info", "MediaPlayPause", "MediaPlay", "MediaPause", "MediaStop", "MediaRewind", "MediaFastForward"],
+  "websiteURL": "https://github.com/DMRooftop/tv-dashboard",
+  "author": "DMRooftop",
+  "license": "MIT"
+}
