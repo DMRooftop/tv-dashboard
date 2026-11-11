@@ -1,6 +1,7 @@
 /* TV dashboard - strict ES5 (Chromium M47 / Tizen 3.0). No arrow fns, let/const, template literals, fetch, Promise. */
 (function () {
   'use strict';
+  window.TV_LOADED = true;
 
   var POLL_MS = 30000;
   var STALE_S = 300;          // status older than 5 min -> "offline" marker

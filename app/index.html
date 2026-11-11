@@ -45,6 +45,42 @@ document.write('<link rel="stylesheet" href="' + window.TV_BASE + 'tv.css?t=' + 
   <div id="offline"></div>
 </div>
 <script>window.TV_STATUS_URL = "http://192.168.68.58:8123/local/tv/status.js";</script>
-<script>document.write('<script src="' + window.TV_BASE + 'tv.js?t=' + window.TV_BUST + '"><\/script>');</script>
+<script>
+// Fallback when the home server cannot be reached (tv.js missing): inline, no dependency on tv.css.
+(function () {
+  var shown = false;
+  function lang() {
+    var l = ((navigator.language || navigator.userLanguage || 'de') + '').slice(0, 2).toLowerCase();
+    return (l === 'en' || l === 'es') ? l : 'de';
+  }
+  var T = {
+    de: ['Heimserver nicht erreichbar – bitte später erneut öffnen.', 'Zurück-Taste beendet. OK = erneut versuchen.'],
+    en: ['Home server unreachable – please open again later.', 'Back exits. OK = retry.'],
+    es: ['Servidor no disponible – vuelve a abrir más tarde.', 'Atrás sale. OK = reintentar.']
+  };
+  function show() {
+    if (shown || window.TV_LOADED) { return; }
+    shown = true;
+    var t = T[lang()];
+    var d = document.createElement('div');
+    d.setAttribute('style', 'position:fixed;left:0;top:0;width:1920px;height:1080px;z-index:99999;background:#0b0b12;color:#fff;font-family:sans-serif;text-align:center;padding-top:400px;box-sizing:border-box');
+    d.innerHTML = '<div style="font-size:56px;margin-bottom:40px">' + t[0] + '</div><div style="font-size:34px;color:#aab">' + t[1] + '</div>';
+    document.body.appendChild(d);
+  }
+  window.TV_FAIL = show;
+  setTimeout(show, 8000);
+  document.addEventListener('keydown', function (e) {
+    if (window.TV_LOADED && !shown) { return; }
+    var k = e.keyCode;
+    if (k === 10009) {
+      try { if (window.tizen && window.tizen.application) { window.tizen.application.getCurrentApplication().exit(); return; } } catch (e1) { }
+      try { window.history.back(); } catch (e2) { }
+    } else if (k === 13 && shown) {
+      window.location.reload();
+    }
+  }, false);
+})();
+</script>
+<script>document.write('<script src="' + window.TV_BASE + 'tv.js?t=' + window.TV_BUST + '" onerror="window.TV_FAIL&&window.TV_FAIL()"><\/script>');</script>
 </body>
 </html>
