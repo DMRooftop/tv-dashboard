@@ -1,6 +1,6 @@
 {
   "name": "tv-dashboard",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Home dashboard (clock, weather, ideas, app launcher) for Samsung Tizen TVs via TizenBrew",
   "packageType": "app",
   "appName": "Zuhause",

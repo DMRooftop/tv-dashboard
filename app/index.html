@@ -8,7 +8,13 @@
 // Updates come from the home server, so this module never needs reinstalling.
 window.TV_BASE = "http://192.168.68.58:8123/local/tv/";
 window.TV_BUST = String(new Date().getTime());
-document.write('<link rel="stylesheet" href="' + window.TV_BASE + 'tv.css?t=' + window.TV_BUST + '">');
+// live copy first; the bundled tv.css/tv.js (same folder) are the fallback when the server does not answer
+window.TV_CSSFAIL = function () {
+  var l = document.createElement('link');
+  l.rel = 'stylesheet'; l.href = 'tv.css';
+  document.getElementsByTagName('head')[0].appendChild(l);
+};
+document.write('<link rel="stylesheet" href="' + window.TV_BASE + 'tv.css?t=' + window.TV_BUST + '" onerror="window.TV_CSSFAIL()">');
 </script>
 </head>
 <body>
@@ -67,8 +73,18 @@ document.write('<link rel="stylesheet" href="' + window.TV_BASE + 'tv.css?t=' + 
     d.innerHTML = '<div style="font-size:56px;margin-bottom:40px">' + t[0] + '</div><div style="font-size:34px;color:#aab">' + t[1] + '</div>';
     document.body.appendChild(d);
   }
-  window.TV_FAIL = show;
-  setTimeout(show, 8000);
+  var localTried = false;
+  function loadLocal() {
+    if (localTried || window.TV_LOADED) { return; }
+    localTried = true;
+    var s = document.createElement('script');
+    s.src = 'tv.js';
+    s.onerror = show;
+    document.getElementsByTagName('head')[0].appendChild(s);
+  }
+  window.TV_FAIL = loadLocal;      // live tv.js failed -> bundled copy
+  setTimeout(loadLocal, 6000);     // server too slow -> bundled copy (tv.js guards against a double start)
+  setTimeout(show, 14000);
   document.addEventListener('keydown', function (e) {
     if (window.TV_LOADED && !shown) { return; }
     var k = e.keyCode;

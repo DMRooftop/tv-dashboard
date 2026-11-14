@@ -1,6 +1,7 @@
 /* TV dashboard - strict ES5 (Chromium M47 / Tizen 3.0). No arrow fns, let/const, template literals, fetch, Promise. */
 (function () {
   'use strict';
+  if (window.TV_LOADED) { return; }   // already started (live copy and bundled fallback must not both run)
   window.TV_LOADED = true;
 
   var POLL_MS = 30000;
@@ -126,6 +127,7 @@
     }
     applyMode();
     fotoTick(s);
+    maybeReload();
     if (status && (new Date().getTime() / 1000 - status.epoch) > STALE_S) { setOffline(true); }
   }
 
@@ -175,6 +177,7 @@
     var f = status.flags || [], fh = '', i;
     for (i = 0; i < f.length; i++) { fh += '<span class="flag">' + esc(t.flags[f[i]] || f[i]) + '</span>'; }
     $('flags').innerHTML = fh;
+    try { setRadarChip(); } catch (eRc) { }
 
     // ideas
     $('ideas-title').innerHTML = esc(t.ideas);
@@ -563,7 +566,7 @@
   }
   function startSaver() {
     var now = new Date().getTime();
-    if (!fState.saver || !slides.length || now < fo.cooldown || welcomeOpen || diagOpen || calmNow()) { return; }
+    if (!fState.saver || !slides.length || now < fo.cooldown || welcomeOpen || diagOpen || radarOpen || calmNow()) { return; }
     shuffleSlides();
     fo.saver = true; fo.mode = 'saver'; fo.fails = 0; fo.ready = null;
     openFoto();
@@ -688,6 +691,168 @@
     } catch (e3) { }
   }
 
+  // ---------- flight radar overlay (green key / "R"; data: radar.js written by tools/flugradar.py) ----------
+  var RADAR_POLL_MS = 30000;      // chip refresh while closed
+  var RADAR_OPEN_POLL_MS = 15000; // refresh while the overlay is open
+  var RADAR_AUTOCLOSE_MS = 300000;
+  var RT = {
+    de: { title: 'Flugradar', empty: 'Gerade keine Flugzeuge im Umkreis', stale: 'Daten veraltet', unknown: 'Route unbekannt', ground: 'am Boden',
+      count: function (n) { return n + (n === 1 ? ' Flugzeug' : ' Flugzeuge') + ' im Umkreis von 25 km'; }, chip: 'Flugradar: ', hint: 'Beliebige Taste = schließen', n: 'N' },
+    en: { title: 'Flight radar', empty: 'No aircraft nearby right now', stale: 'Data outdated', unknown: 'Route unknown', ground: 'on ground',
+      count: function (n) { return n + ' aircraft within 25 km'; }, chip: 'Flight radar: ', hint: 'Any key = close', n: 'N' },
+    es: { title: 'Radar de vuelos', empty: 'Ahora mismo no hay aviones en los alrededores', stale: 'Datos desactualizados', unknown: 'Ruta desconocida', ground: 'en tierra',
+      count: function (n) { return n + (n === 1 ? ' avión' : ' aviones') + ' en 25 km'; }, chip: 'Radar de vuelos: ', hint: 'Cualquier tecla = cerrar', n: 'N' }
+  };
+  var radarOpen = false, radarBuilt = false, radarData = null, radarScript = null, radarTimer = null, radarCloseTimer = null, radarSig = '';
+  var RPATH = 'M0,-10 L2,-3 L10,2 L10,4 L2,2 L2,7 L5,9 L5,10 L0,9 L-5,10 L-5,9 L-2,7 L-2,2 L-10,4 L-10,2 L-2,-3 Z';
+  function rtr() { return RT[lang] || RT.de; }
+  function radarUrl() {
+    if (window.TV_RADAR_URL) { return window.TV_RADAR_URL; }
+    return statusUrl().replace(/status\.js/, 'radar.js');
+  }
+  function radarStale() {
+    return !radarData || radarData.veraltet === true || (new Date().getTime() / 1000 - (radarData.epoch || 0)) > 150;
+  }
+  function radarList() {
+    var l = radarData && radarData.flugzeuge;
+    return (l && l.length) ? l : [];
+  }
+  function setRadarChip() {
+    var old = $('rchip'), c = $('chips'), n = radarList().length;
+    if (old && old.parentNode) { old.parentNode.removeChild(old); }
+    if (!c || !n || radarStale()) { return; }
+    var s = document.createElement('span');
+    s.id = 'rchip';
+    s.className = 'chip on';
+    s.innerHTML = esc(rtr().chip + n);
+    c.appendChild(s);
+  }
+  window.TV_RADAR_CB = function (o) {
+    if (!o || typeof o !== 'object') { return; }
+    radarData = o;
+    try { setRadarChip(); if (radarOpen) { renderRadar(); } } catch (e) { }
+  };
+  function pollRadar() {
+    var head = document.getElementsByTagName('head')[0];
+    if (radarScript && radarScript.parentNode) { radarScript.parentNode.removeChild(radarScript); }
+    var s = document.createElement('script'), u = radarUrl();
+    s.src = u + (u.indexOf('?') >= 0 ? '&' : '?') + 't=' + new Date().getTime();
+    s.onerror = function () { };
+    radarScript = s;
+    head.appendChild(s);
+  }
+  function buildRadar() {
+    var R = 180, C = 200, rings = '', i, km, r;
+    for (i = 1; i <= 5; i++) {
+      km = i * 5; r = R * km / 25;
+      rings += '<circle cx="' + C + '" cy="' + C + '" r="' + r + '" class="rr"/><text x="' + (C + 4) + '" y="' + (C - r + 12) + '" class="rrl">' + km + ' km</text>';
+    }
+    var wx = (C - R * Math.sin(0.9)).toFixed(1), wy = (C - R * Math.cos(0.9)).toFixed(1);
+    var el = document.createElement('div');
+    el.id = 'radar';
+    el.innerHTML = '<div id="r-title"></div><div id="r-count"></div><div id="r-stale"></div>' +
+      '<div id="r-disc"><svg viewBox="0 0 400 400" width="880" height="880" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><linearGradient id="rsg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7CFFA8" stop-opacity="0"/><stop offset="1" stop-color="#7CFFA8" stop-opacity="0.4"/></linearGradient></defs>' +
+      '<circle cx="' + C + '" cy="' + C + '" r="' + (R + 6) + '" class="rbg"/>' +
+      '<line x1="' + C + '" y1="' + (C - R) + '" x2="' + C + '" y2="' + (C + R) + '" class="rax"/>' +
+      '<line x1="' + (C - R) + '" y1="' + C + '" x2="' + (C + R) + '" y2="' + C + '" class="rax"/>' + rings +
+      '<g id="r-sweep"><path d="M' + C + ',' + C + ' L' + C + ',' + (C - R) + ' A' + R + ',' + R + ' 0 0 0 ' + wx + ',' + wy + ' Z" fill="url(#rsg)"/>' +
+      '<animateTransform attributeName="transform" type="rotate" from="0 ' + C + ' ' + C + '" to="360 ' + C + ' ' + C + '" dur="6s" repeatCount="indefinite"/></g>' +
+      '<text x="' + C + '" y="' + (C - R - 9) + '" class="rnorth" id="r-n">N</text>' +
+      '<circle cx="' + C + '" cy="' + C + '" r="4" class="rhome"/><g id="r-pl"></g></svg></div>' +
+      '<div id="r-list"></div><div id="r-hint"></div>';
+    $('screen').appendChild(el);
+    radarBuilt = true;
+  }
+  function renderRadar() {
+    var t = rtr(), list = radarList().slice(0), i, p, h = '', svg = '', R = 180, C = 200;
+    list.sort(function (a, b) { return a.dist_km - b.dist_km; });
+    var sig = lang + '|' + (radarData ? radarData.epoch : '') + '|' + radarStale();
+    if (sig === radarSig) { return; }
+    radarSig = sig;
+    $('r-title').innerHTML = esc(t.title);
+    $('r-n').firstChild.nodeValue = t.n;
+    $('r-count').innerHTML = esc(t.count(list.length));
+    $('r-hint').innerHTML = esc(t.hint);
+    var st = $('r-stale');
+    st.innerHTML = esc(t.stale);
+    st.style.display = radarStale() ? 'block' : 'none';
+    for (i = 0; i < list.length; i++) {
+      p = list[i];
+      var rr = Math.min(p.dist_km, 25) / 25 * R, b = (p.peilung || 0) * Math.PI / 180;
+      var x = C + rr * Math.sin(b), y = C - rr * Math.cos(b);
+      var von = p.von || '', nach = p.nach || '';
+      var rt = (von && nach) ? von + '→' + nach : '';
+      var alt = p.boden ? t.ground : Math.round(p.hoehe_m) + ' m';
+      var left = x > 250, tx = left ? -12 : 12, anc = left ? 'end' : 'start';
+      var name = p.flugnummer || p.callsign;
+      svg += '<g transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ')">' +
+        '<path class="rpl' + (p.boden ? ' g' : '') + '" transform="rotate(' + (p.kurs || 0) + ') scale(0.9)" d="' + RPATH + '"/>' +
+        '<text class="rlab" x="' + tx + '" y="-1" text-anchor="' + anc + '">' + esc(name) + '</text>' +
+        '<text class="rlab2" x="' + tx + '" y="12" text-anchor="' + anc + '">' + esc(rt ? rt + ' · ' + alt : alt) + '</text></g>';
+      if (i < 6) {
+        var route = (von && nach) ? esc((p.von_stadt || von) + ' (' + von + ') → ' + (p.nach_stadt || nach) + ' (' + nach + ')') : '<span class="rdim">' + esc(t.unknown) + '</span>';
+        var tr2 = p.steigt ? ' ↗' : (p.sinkt ? ' ↘' : '');
+        h += '<div class="rrow"><div class="rfn">' + esc(name) + (p.flugnummer ? '<span class="rsm">' + esc(p.callsign) + '</span>' : '') + '</div>' +
+          '<div class="rdist">' + Number(p.dist_km).toFixed(1) + ' km</div>' +
+          '<div class="rroute">' + route + '</div>' +
+          '<div class="rmeta">' + esc(alt + tr2 + (p.speed_kmh != null ? ' · ' + p.speed_kmh + ' km/h' : '')) + '</div></div>';
+      }
+    }
+    if (!list.length) { h = '<div class="rempty">' + esc(t.empty) + '</div>'; }
+    $('r-pl').innerHTML = svg;
+    $('r-list').innerHTML = h;
+  }
+  function closeRadar() {
+    radarOpen = false;
+    if (radarTimer) { clearInterval(radarTimer); radarTimer = null; }
+    if (radarCloseTimer) { clearTimeout(radarCloseTimer); radarCloseTimer = null; }
+    var el = $('radar');
+    if (el) { removeClass(el, 'show'); }
+  }
+  function openRadar() {
+    try {
+      if (!radarBuilt) { buildRadar(); }
+      radarOpen = true; radarSig = '';
+      renderRadar();
+      addClass($('radar'), 'show');
+      pollRadar();
+      if (radarTimer) { clearInterval(radarTimer); }
+      radarTimer = setInterval(pollRadar, RADAR_OPEN_POLL_MS);
+      if (radarCloseTimer) { clearTimeout(radarCloseTimer); }
+      radarCloseTimer = setTimeout(closeRadar, RADAR_AUTOCLOSE_MS);
+    } catch (e) { closeRadar(); }
+  }
+
+  // ---------- auto-update: server writes www/tv/version.js; a changed value reloads the page when idle ----------
+  var VERSION_POLL_MS = 300000;
+  var VERSION_IDLE_MS = 20000;   // no key press for this long before a reload
+  var verBase = null, verPending = false, verScript = null;
+  window.TV_VERSION_CB = function (v) {
+    v = String(v);
+    if (verBase === null) { verBase = v; return; }
+    if (v !== verBase) { verPending = true; }
+  };
+  function versionUrl() {
+    return statusUrl().replace(/status\.js/, 'version.js');
+  }
+  function pollVersion() {
+    var head = document.getElementsByTagName('head')[0];
+    if (verScript && verScript.parentNode) { verScript.parentNode.removeChild(verScript); }
+    var s = document.createElement('script'), u = versionUrl();
+    s.src = u + (u.indexOf('?') >= 0 ? '&' : '?') + 't=' + new Date().getTime();
+    s.onerror = function () { };
+    verScript = s;
+    head.appendChild(s);
+  }
+  function maybeReload() {
+    if (!verPending) { return; }
+    if (radarOpen || welcomeOpen || diagOpen || fo.on) { return; }
+    if (new Date().getTime() - lastKeyAt < VERSION_IDLE_MS) { return; }
+    verPending = false;
+    try { window.location.reload(); } catch (e) { }
+  }
+
   // ---------- keys ----------
   function onKey(e) {
     var k = e.keyCode;
@@ -695,6 +860,7 @@
     wakeUntil = lastKeyAt + WAKE_MS;
     applyMode();
     if (fo.on) { closeFoto(); e.preventDefault(); return; }   // any key ends screensaver / beamed photo and is not passed on
+    if (radarOpen) { closeRadar(); e.preventDefault(); return; }   // any key closes the flight radar
     if (welcomeOpen) { hideWelcome(); e.preventDefault(); return; }   // any key closes the welcome and is not passed on
     if (diagOpen) {
       if (k === 10009 || k === 27 || k === 8 || k === 13) { closeDiag(); }
@@ -708,6 +874,7 @@
     else if (k === 38) { setFocus(focusIdx - COLS); }
     else if (k === 40) { setFocus(focusIdx + COLS); }
     else if (k === 13) { launchApp(APPS[focusIdx]); }
+    else if (k === 404 || k === 82) { openRadar(); }   // green, "r"
     else if (k === 406 || k === 457 || k === 73) { openDiag(); }   // blue, info, "i"
     else if (k === 10009) {
       // Back: exit when we are a real Tizen app; otherwise let TizenBrew / the browser handle it (go back).
@@ -756,6 +923,10 @@
     setInterval(tick, 1000);
     poll();
     setInterval(poll, POLL_MS);
+    pollRadar();
+    setInterval(pollRadar, RADAR_POLL_MS);
+    pollVersion();
+    setInterval(pollVersion, VERSION_POLL_MS);
     pollFoto();
     setInterval(pollFoto, FOTO_STATE_MS);
     fetchSlides();

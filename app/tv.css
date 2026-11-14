@@ -129,3 +129,32 @@ body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #f2
 #fcap span { display: inline-block; padding: 12px 34px; border-radius: 30px; font-size: 40px; line-height: 50px; background: rgba(0,0,0,0.6); }
 #fqr { display: none; position: absolute; left: 40px; bottom: 36px; width: 170px; height: 170px; border-radius: 12px; background-color: #fff; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.92; }
 #fqr.has { display: block; }
+
+/* flight radar overlay */
+#radar { display: none; opacity: 0; position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; z-index: 60; background: #070d09;
+  -webkit-transition: opacity .4s; transition: opacity .4s; }
+#radar.show { display: block; opacity: 1; }
+#r-title { position: absolute; left: 90px; top: 30px; font-size: 64px; line-height: 80px; font-weight: 600; color: #7CFFA8; }
+#r-count { position: absolute; right: 70px; top: 44px; font-size: 40px; line-height: 56px; color: #cfeedd; }
+#r-stale { display: none; position: absolute; left: 640px; top: 40px; padding: 8px 24px; border-radius: 24px; font-size: 32px; background: #5a3a00; color: #ffd48a; }
+#r-disc { position: absolute; left: 50px; top: 120px; width: 880px; height: 880px; }
+#r-list { position: absolute; left: 990px; top: 130px; width: 870px; height: 870px; overflow: hidden; }
+#r-hint { position: absolute; left: 90px; bottom: 22px; font-size: 28px; color: #6f9a82; }
+.rbg { fill: #04100a; stroke: #2f8f55; stroke-width: 2; }
+.rr { fill: none; stroke: #1f6b3e; stroke-width: 1; }
+.rax { stroke: #17502f; stroke-width: 1; }
+.rrl { fill: #4fbf7f; font-size: 10px; }
+.rnorth { fill: #7CFFA8; font-size: 18px; font-weight: bold; text-anchor: middle; }
+.rhome { fill: #7CFFA8; }
+.rpl { fill: #ffd24a; stroke: #1a1300; stroke-width: 0.6; }
+.rpl.g { fill: #99aaaa; }
+.rlab { fill: #fff; font-size: 13px; font-weight: bold; stroke: #04100a; stroke-width: 3px; paint-order: stroke; }
+.rlab2 { fill: #9fe8bd; font-size: 11px; stroke: #04100a; stroke-width: 3px; paint-order: stroke; }
+.rrow { position: relative; height: 136px; margin-bottom: 12px; padding: 10px 22px; border-radius: 18px; background: #12261b; border-left: 8px solid #ffd24a; overflow: hidden; }
+.rfn { position: absolute; left: 26px; top: 8px; font-size: 52px; line-height: 62px; font-weight: 700; color: #fff; white-space: nowrap; }
+.rsm { margin-left: 16px; font-size: 28px; font-weight: 400; color: #9fe8bd; }
+.rdist { position: absolute; right: 24px; top: 8px; font-size: 52px; line-height: 62px; font-weight: 700; color: #7CFFA8; }
+.rroute { position: absolute; left: 26px; top: 70px; width: 820px; font-size: 34px; line-height: 40px; color: #e6f3ea; white-space: nowrap; overflow: hidden; }
+.rmeta { position: absolute; left: 26px; top: 102px; width: 820px; font-size: 28px; line-height: 32px; color: #9fe8bd; white-space: nowrap; overflow: hidden; }
+.rdim { color: #7f9a8a; }
+.rempty { padding-top: 300px; text-align: center; font-size: 54px; line-height: 70px; color: #9fe8bd; }
