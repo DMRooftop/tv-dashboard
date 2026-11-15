@@ -696,11 +696,11 @@
   var RADAR_OPEN_POLL_MS = 15000; // refresh while the overlay is open
   var RADAR_AUTOCLOSE_MS = 300000;
   var RT = {
-    de: { title: 'Flugradar', empty: 'Gerade keine Flugzeuge im Umkreis', stale: 'Daten veraltet', unknown: 'Route unbekannt', ground: 'am Boden',
+    de: { title: 'Flugradar', empty: 'Gerade keine Flugzeuge im Umkreis', stale: 'Daten veraltet', unknown: 'Route unbekannt', ground: 'am Boden', mfr: 'Hersteller', mdl: 'Modell', built: 'Baujahr', reg: 'Kennz.', op: 'Betreiber', unk: 'Unbekannt',
       count: function (n) { return n + (n === 1 ? ' Flugzeug' : ' Flugzeuge') + ' im Umkreis von 25 km'; }, chip: 'Flugradar: ', hint: 'Beliebige Taste = schließen', n: 'N' },
-    en: { title: 'Flight radar', empty: 'No aircraft nearby right now', stale: 'Data outdated', unknown: 'Route unknown', ground: 'on ground',
+    en: { title: 'Flight radar', empty: 'No aircraft nearby right now', stale: 'Data outdated', unknown: 'Route unknown', ground: 'on ground', mfr: 'Manufacturer', mdl: 'Model', built: 'Built', reg: 'Reg.', op: 'Operator', unk: 'Unknown',
       count: function (n) { return n + ' aircraft within 25 km'; }, chip: 'Flight radar: ', hint: 'Any key = close', n: 'N' },
-    es: { title: 'Radar de vuelos', empty: 'Ahora mismo no hay aviones en los alrededores', stale: 'Datos desactualizados', unknown: 'Ruta desconocida', ground: 'en tierra',
+    es: { title: 'Radar de vuelos', empty: 'Ahora mismo no hay aviones en los alrededores', stale: 'Datos desactualizados', unknown: 'Ruta desconocida', ground: 'en tierra', mfr: 'Fabricante', mdl: 'Modelo', built: 'Año', reg: 'Matr.', op: 'Operador', unk: 'Desconocido',
       count: function (n) { return n + (n === 1 ? ' avión' : ' aviones') + ' en 25 km'; }, chip: 'Radar de vuelos: ', hint: 'Cualquier tecla = cerrar', n: 'N' }
   };
   var radarOpen = false, radarBuilt = false, radarData = null, radarScript = null, radarTimer = null, radarCloseTimer = null, radarSig = '';
@@ -751,7 +751,7 @@
     var el = document.createElement('div');
     el.id = 'radar';
     el.innerHTML = '<div id="r-title"></div><div id="r-count"></div><div id="r-stale"></div>' +
-      '<div id="r-disc"><svg viewBox="0 0 400 400" width="880" height="880" xmlns="http://www.w3.org/2000/svg">' +
+      '<div id="r-disc"><svg viewBox="0 0 400 400" width="780" height="780" xmlns="http://www.w3.org/2000/svg">' +
       '<defs><linearGradient id="rsg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7CFFA8" stop-opacity="0"/><stop offset="1" stop-color="#7CFFA8" stop-opacity="0.4"/></linearGradient></defs>' +
       '<circle cx="' + C + '" cy="' + C + '" r="' + (R + 6) + '" class="rbg"/>' +
       '<line x1="' + C + '" y1="' + (C - R) + '" x2="' + C + '" y2="' + (C + R) + '" class="rax"/>' +
@@ -763,6 +763,17 @@
       '<div id="r-list"></div><div id="r-hint"></div>';
     $('screen').appendChild(el);
     radarBuilt = true;
+  }
+  function radarKv(label, val, t) {
+    var has = val !== undefined && val !== null && val !== '';
+    return '<div class="rkv"><span class="rkl">' + esc(label) + '</span> ' + (has ? esc(String(val)) : '<span class="rdim">' + esc(t.unk) + '</span>') + '</div>';
+  }
+  function radarBase() { return radarUrl().replace(/radar\.js.*$/, ''); }
+  function radarPic(p) {
+    var sil = '<svg class="rsil" viewBox="-12 -12 24 24" width="100" height="100" xmlns="http://www.w3.org/2000/svg"><path d="' + RPATH + '" fill="#2f5a43"/></svg>' +
+      '<div class="rsilt">' + esc(p.typ_name || p.typ || '') + '</div>';
+    if (!p.bild) { return sil; }
+    return sil + '<img src="' + esc(radarBase() + p.bild) + '" width="200" height="133" alt="" onerror="this.style.display=\'none\'">';
   }
   function renderRadar() {
     var t = rtr(), list = radarList().slice(0), i, p, h = '', svg = '', R = 180, C = 200;
@@ -791,13 +802,20 @@
         '<text class="rlab" x="' + tx + '" y="-1" text-anchor="' + anc + '">' + esc(name) + '</text>' +
         '<text class="rlab2" x="' + tx + '" y="12" text-anchor="' + anc + '">' + esc(rt ? rt + ' · ' + alt : alt) + '</text>' +
         (p.typ ? '<text class="rlab2" x="' + tx + '" y="25" text-anchor="' + anc + '">' + esc(p.typ) + '</text>' : '') + '</g>';
-      if (i < 6) {
-        var route = (von && nach) ? esc((p.von_stadt || von) + ' (' + von + ') → ' + (p.nach_stadt || nach) + ' (' + nach + ')') : '<span class="rdim">' + esc(t.unknown) + '</span>';
-        var tr2 = p.steigt ? ' ↗' : (p.sinkt ? ' ↘' : '');
-        h += '<div class="rrow"><div class="rfn">' + esc(name) + (p.flugnummer ? '<span class="rsm">' + esc(p.callsign) + '</span>' : '') + '</div>' +
+      if (i < 4) {
+        var route = (von && nach) ? esc((p.von_stadt || von) + ' \u2192 ' + (p.nach_stadt || nach)) : '';
+        var codes = (von && nach) ? esc(von + ' \u2192 ' + nach) : '<span class="rdim">' + esc(t.unknown) + '</span>';
+        var tr2 = p.steigt ? ' \u2197' : (p.sinkt ? ' \u2198' : '');
+        h += '<div class="rrow"><div class="rinfo"><div class="rfn">' + esc(name) + '</div>' +
           '<div class="rdist">' + Number(p.dist_km).toFixed(1) + ' km</div>' +
-          '<div class="rroute">' + route + '</div>' +
-          '<div class="rmeta">' + ((p.typ_name || p.typ) ? '<span class="rtyp">✈ ' + esc(p.typ_name || p.typ) + '</span> · ' : '') + esc(alt + tr2 + (p.speed_kmh != null ? ' · ' + p.speed_kmh + ' km/h' : '')) + '</div></div>';
+          '<div class="rcode">' + codes + '</div>' +
+          '<div class="rcity">' + route + '</div>' +
+          '<div class="rair">' + esc(p.airline || p.callsign || '') + (p.flugnummer && p.callsign ? ' \u00b7 ' + esc(p.callsign) : '') + '</div>' +
+          '<div class="rmeta">' + esc(alt + tr2 + (p.speed_kmh != null ? ' \u00b7 ' + p.speed_kmh + ' km/h' : '')) + '</div></div>' +
+          '<div class="rac"><div class="rpic">' + radarPic(p) + '</div>' +
+          '<div class="rcred">' + esc(p.bild ? (p.bild_credit || '') : '') + '</div>' +
+          '<div class="rtx">' + radarKv(t.mfr, p.hersteller, t) + radarKv(t.mdl, p.modell, t) + radarKv(t.built, p.baujahr, t) +
+          radarKv(t.reg, p.kennzeichen, t) + '<div class="rkv rop">' + esc(p.betreiber || '') + '</div></div></div></div>';
       }
     }
     if (!list.length) { h = '<div class="rempty">' + esc(t.empty) + '</div>'; }

@@ -137,8 +137,8 @@ body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #f2
 #r-title { position: absolute; left: 90px; top: 30px; font-size: 64px; line-height: 80px; font-weight: 600; color: #7CFFA8; }
 #r-count { position: absolute; right: 70px; top: 44px; font-size: 40px; line-height: 56px; color: #cfeedd; }
 #r-stale { display: none; position: absolute; left: 640px; top: 40px; padding: 8px 24px; border-radius: 24px; font-size: 32px; background: #5a3a00; color: #ffd48a; }
-#r-disc { position: absolute; left: 50px; top: 120px; width: 880px; height: 880px; }
-#r-list { position: absolute; left: 990px; top: 130px; width: 870px; height: 870px; overflow: hidden; }
+#r-disc { position: absolute; left: 40px; top: 130px; width: 780px; height: 780px; }
+#r-list { position: absolute; left: 840px; top: 130px; width: 1030px; height: 880px; overflow: hidden; }
 #r-hint { position: absolute; left: 90px; bottom: 22px; font-size: 28px; color: #6f9a82; }
 .rbg { fill: #04100a; stroke: #2f8f55; stroke-width: 2; }
 .rr { fill: none; stroke: #1f6b3e; stroke-width: 1; }
@@ -150,11 +150,23 @@ body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #f2
 .rpl.g { fill: #99aaaa; }
 .rlab { fill: #fff; font-size: 13px; font-weight: bold; stroke: #04100a; stroke-width: 3px; paint-order: stroke; }
 .rlab2 { fill: #9fe8bd; font-size: 11px; stroke: #04100a; stroke-width: 3px; paint-order: stroke; }
-.rrow { position: relative; height: 136px; margin-bottom: 12px; padding: 10px 22px; border-radius: 18px; background: #12261b; border-left: 8px solid #ffd24a; overflow: hidden; }
-.rfn { position: absolute; left: 26px; top: 8px; font-size: 52px; line-height: 62px; font-weight: 700; color: #fff; white-space: nowrap; }
-.rsm { margin-left: 16px; font-size: 28px; font-weight: 400; color: #9fe8bd; }
-.rdist { position: absolute; right: 24px; top: 8px; font-size: 52px; line-height: 62px; font-weight: 700; color: #7CFFA8; }
-.rroute { position: absolute; left: 26px; top: 70px; width: 820px; font-size: 34px; line-height: 40px; color: #e6f3ea; white-space: nowrap; overflow: hidden; }
-.rmeta { position: absolute; left: 26px; top: 102px; width: 820px; font-size: 28px; line-height: 32px; color: #9fe8bd; white-space: nowrap; overflow: hidden; }
+.rrow { position: relative; height: 200px; margin-bottom: 12px; border-radius: 18px; background: #12261b; border-left: 8px solid #ffd24a; overflow: hidden; }
+.rinfo { position: absolute; left: 0; top: 0; width: 420px; height: 200px; }
+.rfn { position: absolute; left: 20px; top: 4px; font-size: 48px; line-height: 56px; font-weight: 700; color: #fff; white-space: nowrap; }
+.rdist { position: absolute; right: 6px; top: 4px; font-size: 40px; line-height: 56px; font-weight: 700; color: #7CFFA8; white-space: nowrap; }
+.rcode { position: absolute; left: 20px; top: 60px; width: 400px; font-size: 36px; line-height: 40px; font-weight: 600; color: #e6f3ea; white-space: nowrap; overflow: hidden; }
+.rcity { position: absolute; left: 20px; top: 100px; width: 400px; font-size: 26px; line-height: 32px; color: #cfeedd; white-space: nowrap; overflow: hidden; }
+.rair { position: absolute; left: 20px; top: 132px; width: 400px; font-size: 26px; line-height: 32px; color: #9fe8bd; white-space: nowrap; overflow: hidden; }
+.rmeta { position: absolute; left: 20px; top: 164px; width: 400px; font-size: 26px; line-height: 32px; color: #ffd24a; white-space: nowrap; overflow: hidden; }
+.rac { position: absolute; left: 430px; top: 0; width: 580px; height: 200px; border-left: 2px solid #1f3d2d; }
+.rpic { position: absolute; left: 16px; top: 12px; width: 200px; height: 133px; border-radius: 10px; background: #0a1a11; overflow: hidden; }
+.rpic img { position: absolute; left: 0; top: 0; width: 200px; height: 133px; }
+.rsil { position: absolute; left: 50px; top: 8px; }
+.rsilt { position: absolute; left: 4px; top: 104px; width: 192px; font-size: 18px; line-height: 22px; text-align: center; color: #7fa892; white-space: nowrap; overflow: hidden; }
+.rcred { position: absolute; left: 16px; top: 150px; width: 204px; height: 40px; font-size: 16px; line-height: 19px; color: #8fb8a2; overflow: hidden; }
+.rtx { position: absolute; left: 232px; top: 8px; width: 340px; height: 184px; overflow: hidden; }
+.rkv { height: 37px; font-size: 27px; line-height: 37px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; }
+.rkl { font-weight: 400; font-size: 22px; color: #7fb99a; }
+.rop { font-weight: 400; font-size: 24px; color: #9fe8bd; }
 .rdim { color: #7f9a8a; }
 .rempty { padding-top: 300px; text-align: center; font-size: 54px; line-height: 70px; color: #9fe8bd; }
