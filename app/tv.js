@@ -789,14 +789,15 @@
       svg += '<g transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ')">' +
         '<path class="rpl' + (p.boden ? ' g' : '') + '" transform="rotate(' + (p.kurs || 0) + ') scale(0.9)" d="' + RPATH + '"/>' +
         '<text class="rlab" x="' + tx + '" y="-1" text-anchor="' + anc + '">' + esc(name) + '</text>' +
-        '<text class="rlab2" x="' + tx + '" y="12" text-anchor="' + anc + '">' + esc(rt ? rt + ' · ' + alt : alt) + '</text></g>';
+        '<text class="rlab2" x="' + tx + '" y="12" text-anchor="' + anc + '">' + esc(rt ? rt + ' · ' + alt : alt) + '</text>' +
+        (p.typ ? '<text class="rlab2" x="' + tx + '" y="25" text-anchor="' + anc + '">' + esc(p.typ) + '</text>' : '') + '</g>';
       if (i < 6) {
         var route = (von && nach) ? esc((p.von_stadt || von) + ' (' + von + ') → ' + (p.nach_stadt || nach) + ' (' + nach + ')') : '<span class="rdim">' + esc(t.unknown) + '</span>';
         var tr2 = p.steigt ? ' ↗' : (p.sinkt ? ' ↘' : '');
         h += '<div class="rrow"><div class="rfn">' + esc(name) + (p.flugnummer ? '<span class="rsm">' + esc(p.callsign) + '</span>' : '') + '</div>' +
           '<div class="rdist">' + Number(p.dist_km).toFixed(1) + ' km</div>' +
           '<div class="rroute">' + route + '</div>' +
-          '<div class="rmeta">' + esc(alt + tr2 + (p.speed_kmh != null ? ' · ' + p.speed_kmh + ' km/h' : '')) + '</div></div>';
+          '<div class="rmeta">' + ((p.typ_name || p.typ) ? '<span class="rtyp">✈ ' + esc(p.typ_name || p.typ) + '</span> · ' : '') + esc(alt + tr2 + (p.speed_kmh != null ? ' · ' + p.speed_kmh + ' km/h' : '')) + '</div></div>';
       }
     }
     if (!list.length) { h = '<div class="rempty">' + esc(t.empty) + '</div>'; }
