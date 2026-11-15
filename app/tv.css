@@ -163,10 +163,18 @@ body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #f2
 .rpic img { position: absolute; left: 0; top: 0; width: 200px; height: 133px; }
 .rsil { position: absolute; left: 50px; top: 8px; }
 .rsilt { position: absolute; left: 4px; top: 104px; width: 192px; font-size: 18px; line-height: 22px; text-align: center; color: #7fa892; white-space: nowrap; overflow: hidden; }
-.rcred { position: absolute; left: 16px; top: 150px; width: 204px; height: 40px; font-size: 16px; line-height: 19px; color: #8fb8a2; overflow: hidden; }
-.rtx { position: absolute; left: 232px; top: 8px; width: 340px; height: 184px; overflow: hidden; }
-.rkv { height: 37px; font-size: 27px; line-height: 37px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; }
-.rkl { font-weight: 400; font-size: 22px; color: #7fb99a; }
+.rcred { position: absolute; left: 16px; top: 148px; width: 206px; height: 50px; font-size: 15px; line-height: 17px; color: #8fb8a2; overflow: hidden; }
+.rtx { position: absolute; left: 232px; top: 6px; width: 344px; height: 188px; overflow: hidden; }
+.rkv { height: 31px; font-size: 26px; line-height: 31px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; }
+.rkl { font-weight: 400; font-size: 20px; color: #7fb99a; }
 .rop { font-weight: 400; font-size: 24px; color: #9fe8bd; }
 .rdim { color: #7f9a8a; }
 .rempty { padding-top: 300px; text-align: center; font-size: 54px; line-height: 70px; color: #9fe8bd; }
+
+.rfact { height: 31px; font-size: 22px; line-height: 31px; font-weight: 600; color: #9fe8bd; white-space: nowrap; overflow: hidden; }
+.rfact.rdim { color: #7f9a8a; font-weight: 400; }
+.rfact.rmil { color: #8fc7ff; }
+.rfact.rbad { color: #fff; background: #c62828; border-radius: 6px; padding: 0 8px; margin-left: -8px; font-weight: 700; }
+.rrow.ralert { border-left-color: #ff3b3b; background: #2a1517; }
+.rrefl { position: absolute; left: 0; top: 0; padding: 0 8px; height: 22px; font-size: 15px; line-height: 22px; font-weight: 600; color: #fff; background: rgba(0,0,0,0.65); border-radius: 0 0 8px 0; white-space: nowrap; }
+.rpic img { object-fit: cover; }

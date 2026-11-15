@@ -696,11 +696,20 @@
   var RADAR_OPEN_POLL_MS = 15000; // refresh while the overlay is open
   var RADAR_AUTOCLOSE_MS = 300000;
   var RT = {
-    de: { title: 'Flugradar', empty: 'Gerade keine Flugzeuge im Umkreis', stale: 'Daten veraltet', unknown: 'Route unbekannt', ground: 'am Boden', mfr: 'Hersteller', mdl: 'Modell', built: 'Baujahr', reg: 'Kennz.', op: 'Betreiber', unk: 'Unbekannt',
+    de: { title: 'Flugradar', empty: 'Gerade keine Flugzeuge im Umkreis', stale: 'Daten veraltet', unknown: 'Route unbekannt', ground: 'am Boden', mfr: 'Hersteller', mdl: 'Modell', built: 'Baujahr', reg: 'Kennz.', op: 'Betreiber', unk: 'Unbekannt', refimg: 'Vergleichsbild', imgby: 'Bild: ', imglic: ' (Lizenz lt. Quelle)', seats: 'Sitze', sqk: 'Squawk ', mil: 'Milit\u00e4r/Beh\u00f6rde', mpm: ' m/min',
+      sqe: { '7500': 'Entf\u00fchrung', '7600': 'Funkausfall', '7700': 'Notfall' },
+      eng: { P: 'Kolbenmotor', T: 'Turboprop', J: 'Jet', S: 'Turbine' },
+      kat: { A1: 'Leichtflugzeug', A2: 'Kleinflugzeug', A3: 'Verkehrsflugzeug', A4: 'Verkehrsflugzeug', A5: 'Gro\u00dfraumflugzeug', A6: 'Hochleistungsflugzeug', A7: 'Hubschrauber', B1: 'Segelflugzeug', B2: 'Ballon', B4: 'Ultraleichtflugzeug', B6: 'Drohne' },
       count: function (n) { return n + (n === 1 ? ' Flugzeug' : ' Flugzeuge') + ' im Umkreis von 25 km'; }, chip: 'Flugradar: ', hint: 'Beliebige Taste = schließen', n: 'N' },
-    en: { title: 'Flight radar', empty: 'No aircraft nearby right now', stale: 'Data outdated', unknown: 'Route unknown', ground: 'on ground', mfr: 'Manufacturer', mdl: 'Model', built: 'Built', reg: 'Reg.', op: 'Operator', unk: 'Unknown',
+    en: { title: 'Flight radar', empty: 'No aircraft nearby right now', stale: 'Data outdated', unknown: 'Route unknown', ground: 'on ground', mfr: 'Manufacturer', mdl: 'Model', built: 'Built', reg: 'Reg.', op: 'Operator', unk: 'Unknown', refimg: 'Reference image', imgby: 'Image: ', imglic: ' (license per source)', seats: 'seats', sqk: 'Squawk ', mil: 'Military/Government', mpm: ' m/min',
+      sqe: { '7500': 'Hijack', '7600': 'Radio failure', '7700': 'Emergency' },
+      eng: { P: 'piston engine', T: 'turboprop', J: 'jet', S: 'turbine' },
+      kat: { A1: 'Light aircraft', A2: 'Small aircraft', A3: 'Airliner', A4: 'Airliner', A5: 'Heavy aircraft', A6: 'High performance', A7: 'Helicopter', B1: 'Glider', B2: 'Balloon', B4: 'Ultralight', B6: 'Drone' },
       count: function (n) { return n + ' aircraft within 25 km'; }, chip: 'Flight radar: ', hint: 'Any key = close', n: 'N' },
-    es: { title: 'Radar de vuelos', empty: 'Ahora mismo no hay aviones en los alrededores', stale: 'Datos desactualizados', unknown: 'Ruta desconocida', ground: 'en tierra', mfr: 'Fabricante', mdl: 'Modelo', built: 'Año', reg: 'Matr.', op: 'Operador', unk: 'Desconocido',
+    es: { title: 'Radar de vuelos', empty: 'Ahora mismo no hay aviones en los alrededores', stale: 'Datos desactualizados', unknown: 'Ruta desconocida', ground: 'en tierra', mfr: 'Fabricante', mdl: 'Modelo', built: 'Año', reg: 'Matr.', op: 'Operador', unk: 'Desconocido', refimg: 'Imagen de referencia', imgby: 'Imagen: ', imglic: ' (licencia seg\u00fan la fuente)', seats: 'plazas', sqk: 'Squawk ', mil: 'Militar/Autoridad', mpm: ' m/min',
+      sqe: { '7500': 'Secuestro', '7600': 'Fallo de radio', '7700': 'Emergencia' },
+      eng: { P: 'motor de pist\u00f3n', T: 'turbohélice', J: 'reactor', S: 'turbina' },
+      kat: { A1: 'Avi\u00f3n ligero', A2: 'Avi\u00f3n peque\u00f1o', A3: 'Avi\u00f3n de l\u00ednea', A4: 'Avi\u00f3n de l\u00ednea', A5: 'Avi\u00f3n grande', A6: 'Alto rendimiento', A7: 'Helic\u00f3ptero', B1: 'Planeador', B2: 'Globo', B4: 'Ultraligero', B6: 'Dron' },
       count: function (n) { return n + (n === 1 ? ' avión' : ' aviones') + ' en 25 km'; }, chip: 'Radar de vuelos: ', hint: 'Cualquier tecla = cerrar', n: 'N' }
   };
   var radarOpen = false, radarBuilt = false, radarData = null, radarScript = null, radarTimer = null, radarCloseTimer = null, radarSig = '';
@@ -772,8 +781,36 @@
   function radarPic(p) {
     var sil = '<svg class="rsil" viewBox="-12 -12 24 24" width="100" height="100" xmlns="http://www.w3.org/2000/svg"><path d="' + RPATH + '" fill="#2f5a43"/></svg>' +
       '<div class="rsilt">' + esc(p.typ_name || p.typ || '') + '</div>';
-    if (!p.bild) { return sil; }
-    return sil + '<img src="' + esc(radarBase() + p.bild) + '" width="200" height="133" alt="" onerror="this.style.display=\'none\'">';
+    var src = p.bild || p.typ_bild;
+    if (!src) { return sil; }
+    return sil + '<img src="' + esc(radarBase() + src) + '" width="200" height="133" alt="" onerror="this.style.display=\'none\'">' +
+      (p.bild ? '' : '<div class="rrefl">' + esc(rtr().refimg) + '</div>');
+  }
+  function radarCredit(p, t) {
+    if (p.bild) { return p.bild_credit || ''; }
+    if (!p.typ_bild) { return ''; }
+    return t.imgby + (p.typ_credit ? p.typ_credit + ' / Wikimedia Commons' : 'Wikipedia/Wikimedia' + t.imglic);
+  }
+  function radarFacts(p, t) {
+    var f = [], sq = String(p.sq || ''), n;
+    if (t.sqe[sq]) { f.push({ x: t.sqk + sq + ' \u00b7 ' + t.sqe[sq], c: 'rbad' }); }
+    if (p.mil) { f.push({ x: t.mil, c: 'rmil' }); }
+    if (p.antrieb_n && t.eng[p.antrieb_art]) {
+      n = p.sitze ? Number(p.sitze) : 0;
+      f.push({ x: p.antrieb_n + '\u00d7 ' + t.eng[p.antrieb_art] + (n ? ' \u00b7 ' + (n > 10 ? '~' : '') + n + ' ' + t.seats : ''), c: '' });
+    }
+    if (p.baujahr) { f.push({ x: t.built + ' ' + p.baujahr, c: '' }); }
+    if (p.vrate_mpm !== undefined && p.vrate_mpm !== '' && p.vrate_mpm !== null) {
+      f.push({ x: (p.vrate_mpm > 0 ? '\u2197 +' : '\u2198 ') + p.vrate_mpm + t.mpm, c: '' });
+    }
+    if (p.kat && t.kat[p.kat]) { f.push({ x: t.kat[p.kat], c: '' }); }
+    if (sq && !t.sqe[sq] && sq !== '0000') { f.push({ x: t.sqk + sq, c: 'rdim' }); }
+    return f.slice(0, 3);
+  }
+  function radarFactsHtml(p, t) {
+    var f = radarFacts(p, t), i, h = '';
+    for (i = 0; i < f.length; i++) { h += '<div class="rfact ' + f[i].c + '">' + esc(f[i].x) + '</div>'; }
+    return h;
   }
   function renderRadar() {
     var t = rtr(), list = radarList().slice(0), i, p, h = '', svg = '', R = 180, C = 200;
@@ -806,16 +843,16 @@
         var route = (von && nach) ? esc((p.von_stadt || von) + ' \u2192 ' + (p.nach_stadt || nach)) : '';
         var codes = (von && nach) ? esc(von + ' \u2192 ' + nach) : '<span class="rdim">' + esc(t.unknown) + '</span>';
         var tr2 = p.steigt ? ' \u2197' : (p.sinkt ? ' \u2198' : '');
-        h += '<div class="rrow"><div class="rinfo"><div class="rfn">' + esc(name) + '</div>' +
+        h += '<div class="rrow' + (t.sqe[String(p.sq || '')] ? ' ralert' : '') + '"><div class="rinfo"><div class="rfn">' + esc(name) + '</div>' +
           '<div class="rdist">' + Number(p.dist_km).toFixed(1) + ' km</div>' +
           '<div class="rcode">' + codes + '</div>' +
           '<div class="rcity">' + route + '</div>' +
-          '<div class="rair">' + esc(p.airline || p.callsign || '') + (p.flugnummer && p.callsign ? ' \u00b7 ' + esc(p.callsign) : '') + '</div>' +
+          '<div class="rair">' + esc(p.airline || p.betreiber || p.callsign || '') + (p.flugnummer && p.callsign ? ' \u00b7 ' + esc(p.callsign) : '') + '</div>' +
           '<div class="rmeta">' + esc(alt + tr2 + (p.speed_kmh != null ? ' \u00b7 ' + p.speed_kmh + ' km/h' : '')) + '</div></div>' +
           '<div class="rac"><div class="rpic">' + radarPic(p) + '</div>' +
-          '<div class="rcred">' + esc(p.bild ? (p.bild_credit || '') : '') + '</div>' +
-          '<div class="rtx">' + radarKv(t.mfr, p.hersteller, t) + radarKv(t.mdl, p.modell, t) + radarKv(t.built, p.baujahr, t) +
-          radarKv(t.reg, p.kennzeichen, t) + '<div class="rkv rop">' + esc(p.betreiber || '') + '</div></div></div></div>';
+          '<div class="rcred">' + esc(radarCredit(p, t)) + '</div>' +
+          '<div class="rtx">' + radarKv(t.mfr, p.hersteller, t) + radarKv(t.mdl, p.modell, t) +
+          radarKv(t.reg, p.kennzeichen, t) + radarFactsHtml(p, t) + '</div></div></div>';
       }
     }
     if (!list.length) { h = '<div class="rempty">' + esc(t.empty) + '</div>'; }
